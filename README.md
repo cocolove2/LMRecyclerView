@@ -37,3 +37,6 @@ mDatas.add(images[i]);
 * 使用方式和使用RecyclerView一样
 * 实现`OnRecyclerLoadMoreListener`接口进行监听数据加载
 * 最后调用 `loadComplete(boolean isSuccess, boolean isHasMore)`,通知`LMRecyclerView`加载完成。
+
+####自定义加载布局请参考demo
+*  [DefaultLoadMoreView](https://github.com/cocolove2/LMRecyclerView/blob/master/app/src/main/java/com/cocolove2/lmrecyclerviewdemo/lmRecyclerview/DefaultLoadMoreView.java)
