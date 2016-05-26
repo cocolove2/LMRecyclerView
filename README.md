@@ -1,5 +1,9 @@
+
+
 # LMRecyclerView
 支持加载更多的RecyclerView
+
+######[使用文档简书版](http://www.jianshu.com/p/09c076d275d5)
 
 ###功能
 * 支持加载更多
