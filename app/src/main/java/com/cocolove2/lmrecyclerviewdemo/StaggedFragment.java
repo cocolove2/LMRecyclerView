@@ -16,13 +16,10 @@ import com.cocolove2.lmrecyclerviewdemo.lmRecyclerview.LMRecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by liubo on 5/25/16.
- */
+
 public class StaggedFragment extends Fragment implements LMRecyclerView.OnRecyclerLoadMoreListener{
     LMRecyclerView mLMRecyclerView;
 
-    SwipeRefreshLayout s;
 
 
     private String[] images = {"http://img2.imgtn.bdimg.com/it/u=3093785514,1341050958&fm=21&gp=0.jpg",
@@ -57,9 +54,8 @@ public class StaggedFragment extends Fragment implements LMRecyclerView.OnRecycl
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         initDatas();
-//        mLMRecyclerView.setLoadingMoreEnable(false);
+        mLMRecyclerView.setSupportHeader(true);
         StaggeredGridLayoutManager manager=new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
-//        manager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         mLMRecyclerView.setLayoutManager(manager);
         mLMRecyclerView.setLoadMoreView(new DefaultGoogleLoadMoreView(getActivity()));
         mAdapter = new StaggeredAdapter(getActivity(), mDatas);

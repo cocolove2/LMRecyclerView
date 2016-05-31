@@ -13,9 +13,7 @@ import com.cocolove2.lmrecyclerviewdemo.R;
 
 import java.util.List;
 
-/**
- * Created by liubo on 5/25/16.
- */
+
 public class LinearAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
    private Activity mActivity;
     private List<String>datas;

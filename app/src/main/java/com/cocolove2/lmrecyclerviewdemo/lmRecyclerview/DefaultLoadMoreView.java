@@ -11,10 +11,7 @@ import android.widget.TextView;
 import com.cocolove2.lmrecyclerviewdemo.R;
 
 
-/**
- *
- * Created by liubo on 5/25/16.
- */
+
 public class DefaultLoadMoreView extends LoadMoreViewBase {
     private static final String TEXT_STATUS_LOADING = "正在加载";
     private static final String TEXT_STATUS_LOAD_FAIL = "重新加载";

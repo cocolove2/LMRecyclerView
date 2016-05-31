@@ -7,9 +7,7 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-/**
- * Created by liubo on 5/25/16.
- */
+
 public abstract class LoadMoreViewBase extends LinearLayout {
 
 

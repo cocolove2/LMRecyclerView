@@ -14,9 +14,7 @@ import com.cocolove2.lmrecyclerviewdemo.lmRecyclerview.LMRecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by liubo on 5/25/16.
- */
+
 public class LinearFragment extends Fragment implements LMRecyclerView.OnRecyclerLoadMoreListener{
     LMRecyclerView mLMRecyclerView;
 

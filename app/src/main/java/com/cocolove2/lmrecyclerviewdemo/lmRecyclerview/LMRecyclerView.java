@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -14,19 +15,25 @@ import android.view.ViewGroup;
  * 拥有加载更多功能的RecyclerView
  * 适用于线性,网格,瀑布流
  * <p>
- * Created by liubo on 5/25/16.
+ * 1.支持头部添加(1.0.1版本添加)
+ * <p>
+ *  version 1.0.1
+ * Created by cocolove2 on 5/25/16.
  */
 public class LMRecyclerView extends RecyclerView {
 
     private LoadMoreViewBase mLoadMoreView;
     //是否激活加载更好功能
     private boolean loadMoreEnable = true;
+    //是否支持头部(针对网格和瀑布流)
+    private boolean isSupportHeader = true;
     //是否正在加载数据
     private boolean isLoadingData = false;
     //是否加载失败
     private boolean isLoadingFail = false;
     //是否还有数据可以加载()
     private boolean isHasMoreData = true;
+
     //加载更多的接口
     private OnRecyclerLoadMoreListener mLoadingListener;
     //包装原始的adapter使其可以支持加载更多布局
@@ -72,20 +79,21 @@ public class LMRecyclerView extends RecyclerView {
         });
     }
 
+    public void setSupportHeader(boolean isSupportHeader) {
+        this.isSupportHeader = isSupportHeader;
+    }
+
+
 
     //onScrollStateChanged 中必须是要等到释放是才能触发加载,如果想在没有释放之前触发的话,在onScrolled方法中实现
 
     @Override
     public void onScrollStateChanged(int state) {
-        super.onScrollStateChanged(state);
-        doLoadMore();
+//        super.onScrollStateChanged(state);
+            doLoadMore();
     }
 
-//    @Override
-//    public void onScrolled(int dx, int dy) {
-//        super.onScrolled(dx, dy);
-//        doLoadMore();
-//    }
+
 
     private void doLoadMore() {
         if (mLoadingListener != null
@@ -108,7 +116,6 @@ public class LMRecyclerView extends RecyclerView {
             final int itemCount = layoutManager.getItemCount();
 
             if (childCount > 0 && lastVisibleItemPosition >= itemCount - 2 && itemCount > childCount && isHasMoreData) {
-
                 isLoadingData = true;
                 mLoadMoreView.onLoadingStatus();
                 mLoadingListener.onLoadMore(this);
@@ -125,6 +132,9 @@ public class LMRecyclerView extends RecyclerView {
         mWrapAdapter = new WrapAdapter(adapter, mLoadMoreView);
         super.setAdapter(mWrapAdapter);
         adapter.registerAdapterDataObserver(mDataObserver);
+        final LayoutManager manager = getLayoutManager();
+        if (manager instanceof GridLayoutManager)
+            handleGridlayoutmanager((GridLayoutManager) manager);
     }
 
     /**
@@ -177,10 +187,13 @@ public class LMRecyclerView extends RecyclerView {
         @SuppressWarnings("unchecked")
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
+
+            if (getLayoutManager() instanceof StaggeredGridLayoutManager)
+                handleStaggerLayoutManager(holder, position);
+
             if (!isFooter(position)) {
                 adapter.onBindViewHolder(holder, position);
             } else {
-                handleDifferentLayoutManager(holder);
                 //判断是否显示加载更多布局(防止数据不足一页时显示加载更多布局)
                 if (!isShowLoadMore()) {
                     mFootView.setVisibility(GONE);
@@ -196,48 +209,26 @@ public class LMRecyclerView extends RecyclerView {
             }
         }
 
-        private boolean isShowLoadMore() {
-            return loadMoreEnable&&getChildCount()>0&&getItemCount() > getChildCount() + 1;
+        public boolean isShowLoadMore() {
+            return loadMoreEnable && getChildCount() > 0 && getItemCount() > getChildCount() + 1;
         }
 
-        private boolean isFooter(int position) {
+        public boolean isFooter(int position) {
             return position >= (getItemCount() - 1);
         }
 
-        private void handleDifferentLayoutManager(ViewHolder holder) {
-            final LayoutManager layoutManager = getLayoutManager();
-            if (layoutManager instanceof StaggeredGridLayoutManager) {
-                ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
+        private void handleStaggerLayoutManager(ViewHolder holder, int position) {
+            ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
 
-                if (layoutParams instanceof StaggeredGridLayoutManager.LayoutParams) {
-                    ((StaggeredGridLayoutManager.LayoutParams) layoutParams).setFullSpan(true);
-                } else {
-                    //解决layoutParams为空或者不是StaggeredGridLayoutManager.LayoutParams类型时,加载更多布局的显示问题
-                    holder.itemView.setLayoutParams(new StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                    layoutParams = holder.itemView.getLayoutParams();
-                    ((StaggeredGridLayoutManager.LayoutParams) layoutParams).setFullSpan(true);
-                }
+            if (layoutParams == null || !(layoutParams instanceof StaggeredGridLayoutManager.LayoutParams)) {
+                holder.itemView.setLayoutParams(new StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                layoutParams = holder.itemView.getLayoutParams();
+            }
 
-            } else if (layoutManager instanceof GridLayoutManager) {
-
-                final GridLayoutManager gridLayoutManager = (GridLayoutManager) layoutManager;
-//首次初始化是如果不保证数据源是网格布局的spancount的整数倍时,gridLayoutManger会报数组角标越界的异常
-//                if((getItemCount()-1) %gridLayoutManager.getSpanCount()!=0){
-//                    throw  new IllegalArgumentException("when use GridLayoutManager," +
-//                            "the value of [adapter.getItemCount() % gridLayoutManager.getSpanCount()] must be zero! ");
-//                }
-
-                gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
-                    @Override
-                    public int getSpanSize(int position) {
-                        final int viewType = getAdapter().getItemViewType(position);
-                        if (viewType < 0&&isShowLoadMore()) {
-                            return gridLayoutManager.getSpanCount();
-                        } else {
-                            return 1;
-                        }
-                    }
-                });
+            if ((isSupportHeader && position == 0) || isFooter(position)) {
+                ((StaggeredGridLayoutManager.LayoutParams) layoutParams).setFullSpan(true);
+            } else {
+                ((StaggeredGridLayoutManager.LayoutParams) layoutParams).setFullSpan(false);
             }
 
         }
@@ -256,6 +247,21 @@ public class LMRecyclerView extends RecyclerView {
             }
         }
     }
+
+
+    private void handleGridlayoutmanager(final GridLayoutManager gridLayoutManager) {
+        gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if ((mWrapAdapter.isFooter(position) && mWrapAdapter.isShowLoadMore()) || (isSupportHeader && position == 0)) {
+                    return gridLayoutManager.getSpanCount();
+                } else {
+                    return 1;
+                }
+            }
+        });
+    }
+
 
     private class SimpleViewHolder extends ViewHolder {
 
